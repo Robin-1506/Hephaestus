@@ -1,0 +1,4 @@
+Test_FastAPI/
+__pycache__/
+*.pyc
+.DS_Store
