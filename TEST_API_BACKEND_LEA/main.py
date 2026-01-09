@@ -15,29 +15,29 @@ from fastapi import FastAPI
 
 import requests
 
+import random
+
 app = FastAPI()
+
+BASE_DE_DONNEES = [
+    {"word": "python", "category": "programmation", "difficulty": "facile"},
+    {"word": "fastapi", "category": "web", "difficulty": "moyen"},
+    {"word": "docker", "category": "devops", "difficulty": "difficile"},
+    {"word": "ollama", "category": "ia", "difficulty": "moyen"}
+]
+
+@app.get("/words/random")
+async def get_random():
+    return random.choice(BASE_DE_DONNEES)
 
 
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
 
-@app.get("/random-word-API")
-async def random_word():
+"""@app.get("/random-word")
+async def random_word_backend():
     url = "https://www.wordgamedb.com/api/v2/words/random"
     response = requests.get(url)
     data = response.json()
-    #mot = data["word"]
-    #print(mot)
-    #return response.json()["word"]
-    return {"random_word": data["word"]}
-
-@app.get("/random-word-backend")
-async def random_word_backend():
-    url = "http://127.0.0.1:8001/words/random"
-    response = requests.get(url)
-    data = response.json()
-    #mot = data["word"]
-    #print(mot)
-    #return response.json()["word"]
-    return {"random_word_backend": data["word"]}
+    return {"random_word_backend": data["word"]}"""

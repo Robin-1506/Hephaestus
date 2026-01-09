@@ -37,7 +37,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/Users/leaklein/Desktop/COURS/EPITECH/MSc 1/BOOTCAMP IA BOT/Hephaestus/Test_FastAPI"
+VIRTUAL_ENV="/Users/leaklein/Desktop/COURS/EPITECH/MSc 1/BOOTCAMP IA BOT/Hephaestus/TEST_API_BACKEND_LEA/TEST_FastAPI"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
@@ -54,7 +54,7 @@ fi
 
 if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT:-}" ] ; then
     _OLD_VIRTUAL_PS1="${PS1:-}"
-    PS1="(Test_FastAPI) ${PS1:-}"
+    PS1="(TEST_FastAPI) ${PS1:-}"
     export PS1
 fi
 

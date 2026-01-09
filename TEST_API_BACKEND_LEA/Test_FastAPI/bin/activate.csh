@@ -8,7 +8,7 @@ alias deactivate 'test $?_OLD_VIRTUAL_PATH != 0 && setenv PATH "$_OLD_VIRTUAL_PA
 # Unset irrelevant variables.
 deactivate nondestructive
 
-setenv VIRTUAL_ENV "/Users/leaklein/Desktop/COURS/EPITECH/MSc 1/BOOTCAMP IA BOT/Hephaestus/Test_FastAPI"
+setenv VIRTUAL_ENV "/Users/leaklein/Desktop/COURS/EPITECH/MSc 1/BOOTCAMP IA BOT/Hephaestus/TEST_API_BACKEND_LEA/TEST_FastAPI"
 
 set _OLD_VIRTUAL_PATH="$PATH"
 setenv PATH "$VIRTUAL_ENV/bin:$PATH"
@@ -17,7 +17,7 @@ setenv PATH "$VIRTUAL_ENV/bin:$PATH"
 set _OLD_VIRTUAL_PROMPT="$prompt"
 
 if (! "$?VIRTUAL_ENV_DISABLE_PROMPT") then
-    set prompt = "(Test_FastAPI) $prompt"
+    set prompt = "(TEST_FastAPI) $prompt"
 endif
 
 alias pydoc python -m pydoc
