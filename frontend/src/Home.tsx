@@ -1,5 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
 
+import logo from './assets/NaviGas.png'
+import mascotte from './assets/Navi.png'
+
 import './Home.css'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/chat'
@@ -59,13 +62,16 @@ function Home() {
     return (
         <div className="container">
             <header className='header'>
-                <h1>Find your fuel</h1>
+                <img src={logo} alt="NaviGas" className='logo' />
             </header>
 
             <main className='main'>
                 <div className="messages">
                     {messages.length === 0 ? (
-                        <div className="empty">Aucun message — envoie le premier message.</div>
+                        <div className="empty">
+                            <img src={logo} alt="NaviGas" className='logo' />
+                            <p>"Aide-moi à trouver du Sans Plomb 95 dans un rayon de 5km autour de moi."</p>
+                        </div>
                     ) : (
                         messages.map(m => (
                             <div
