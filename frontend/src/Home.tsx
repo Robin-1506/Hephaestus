@@ -13,17 +13,18 @@ function Home() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        console.log('Recherche envoyée :', query)
-        // TODO: remplacer par appel API / navigation
-        setQuery('')
 
         const text = query.trim()
         if (!text) return
 
-        const newMessage: Message = { id: Date.now(), text, sender: 'user'}
-        setMessages((prevMessages) => [...prevMessages, newMessage])
+        const userMessage: Message = { id: Date.now(), text, sender: 'user'}
+        setMessages((prevMessages) => [...prevMessages, userMessage])
         setQuery('')
-        // TODO: appeler l'API / ajouter la réponse du bot ensuite
+
+        setTimeout(() => {
+            const botMessage: Message = { id:Date.now() + 1, text: 'message envoyé', sender: 'bot' }
+            setMessages((prevMessages) => [...prevMessages, botMessage])
+        }, 300)
     }
 
     useEffect(() => {

@@ -63,6 +63,12 @@
 }
 
 .message.bot {
+    background: #ff9b9b;
+    color: white;
+    align-self: flex-start;
+}
+
+.message.bot {
     align-self: flex-start;
 }
 
