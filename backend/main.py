@@ -5,7 +5,7 @@ import requests
 
 app = FastAPI()
 
-# CORS pour tests
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -14,9 +14,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# URL et modèle pour qwen-3
-OLLAMA_URL = "http://localhost:11434/generate"
-MODEL_NAME = "qwen3"
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "qwen3:latest"
 
 class PromptRequest(BaseModel):
     prompt: str
@@ -30,28 +29,23 @@ def health_check():
 
 @app.post("/chat", response_model=AIResponse)
 def chat_with_ollama(data: PromptRequest):
-    if not data.prompt:
-        return {"response": "Le prompt est vide"}
 
     payload = {
-        "model": MODEL_NAME,       # qwen-3
+        "model": MODEL_NAME,
         "prompt": data.prompt,
         "stream": False,
-        "max_tokens": 1024,
-        "temperature": 0.7
+        "temperature": 0.7,
+        "num_predict": 1024
     }
 
     try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
+        response = requests.post(OLLAMA_URL, json=payload, timeout=120)
         response.raise_for_status()
-        result = response.json()
-        print("Réponse brute d'Ollama:", result)
 
-        text = result.get("response") or result.get("completion") or "Réponse vide"
-        return {"response": text}
+        result = response.json()
+        print("Réponse brute Ollama:", result)
+
+        return {"response": result.get("response", "Réponse vide")}
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"response": f"Erreur lors de la communication avec Ollama: {str(e)}"}
-
+        return {"response": f"Erreur Ollama: {str(e)}"}
