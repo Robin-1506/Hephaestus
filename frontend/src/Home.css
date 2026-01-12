@@ -1,6 +1,7 @@
 * {
     margin: 0;
     padding: 0;
+    background: #F1F5F9;
 }
 
 #root {
@@ -60,13 +61,13 @@
 }
 
 .message.user {
-    background: #0b84ff;
+    background: #457b9d;
     color: white;
     align-self: flex-end;
 }
 
 .message.bot {
-    background: #ff9b9b;
+    background: #1d3557;
     color: white;
     align-self: flex-start;
 }
@@ -85,7 +86,7 @@
     flex: 1;
     padding: 10px 12px;
     border-radius: 10px;
-    background: white;
+    background: #a8dadc;
     border: none;
     color: black;
     min-width: 400px;
@@ -97,12 +98,16 @@
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    color: black;
-    background: white;
+    color: #F1F5F9;
+    background: #a8dadc;
+}
+
+.searchButton svg {
+    background: transparent;
 }
 
 .searchButton:hover {
-    background: #cdcdcd;
+    background: #75999a;
 
 }
 
