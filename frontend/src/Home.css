@@ -43,7 +43,7 @@
 .messages {
     flex: 1;
     width: 100%;
-    max-width: 800px;
+    width: 800px;
     overflow-y: auto; 
     display: flex;
     flex-direction: column;
