@@ -1,57 +1,32 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import requests
+
+# IMPORTANT: Ensure this matches your file name (embedding.py)
+import embedding 
 
 app = FastAPI()
-
-# CORS pour tests
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# URL et modèle pour qwen-3
-OLLAMA_URL = "http://localhost:11434/generate"
-MODEL_NAME = "qwen3"
 
 class PromptRequest(BaseModel):
     prompt: str
 
-class AIResponse(BaseModel):
-    response: str
+@app.post("/find-fuel")
+def find_fuel(data: PromptRequest):
+    print(f"Analyzing: {data.prompt}")
+    
+    # 1. Ask Ollama (Make sure "qwen3" is the right name!)
+    extracted = embedding.extract_search_params(data.prompt, model_name="qwen3:0.6b")
+    
+    if not extracted or "city" not in extracted:
+        raise HTTPException(status_code=400, detail="AI could not understand the city or fuel.")
 
-@app.get("/")
-def health_check():
-    return {"status": "Ollama FastAPI backend running"}
+    # 2. Get Coordinates
+    coords = embedding.get_coordinates(extracted["city"])
+    if not coords:
+        raise HTTPException(status_code=404, detail="City not found.")
 
-@app.post("/chat", response_model=AIResponse)
-def chat_with_ollama(data: PromptRequest):
-    if not data.prompt:
-        return {"response": "Le prompt est vide"}
+    # 3. Get Prices
+    stations = embedding.fetch_fuel_data(
+        coords['lat'], coords['lon'], extracted.get("fuel_type", "Gazole")
+    )
 
-    payload = {
-        "model": MODEL_NAME,       # qwen-3
-        "prompt": data.prompt,
-        "stream": False,
-        "max_tokens": 1024,
-        "temperature": 0.7
-    }
-
-    try:
-        response = requests.post(OLLAMA_URL, json=payload, timeout=60)
-        response.raise_for_status()
-        result = response.json()
-        print("Réponse brute d'Ollama:", result)
-
-        text = result.get("response") or result.get("completion") or "Réponse vide"
-        return {"response": text}
-
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        return {"response": f"Erreur lors de la communication avec Ollama: {str(e)}"}
-
+    return {"analysis": extracted, "results": stations}
