@@ -1,6 +1,18 @@
 version: "3.9"
 
 services:
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "11434:11434"
+    command: ["serve"]
+    restart: unless-stopped
+    networks:
+      - hephaestus-network
+
   backend:
     build: ./backend
     container_name: fastapi_backend
@@ -8,21 +20,25 @@ services:
       - "8000:8000"
     depends_on:
       - ollama
+    networks:
+      - hephaestus-network
+    environment:
+      - OLLAMA_HOST=ollama:11434
 
   frontend:
     build: ./frontend
     container_name: react_frontend
     ports:
       - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - hephaestus-network
 
-  ollama:
-    image: ollama/ollama
-    container_name: ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-    restart: unless-stopped
 
 volumes:
-  ollama_data:
+  ollama:
+
+networks:
+  hephaestus-network:
+    driver: bridge
