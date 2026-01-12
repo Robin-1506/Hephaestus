@@ -2,7 +2,32 @@ import React, { useState, useRef, useEffect } from 'react'
 
 import './Home.css'
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/chat'
 type Message = { id: number; text: string; sender: 'user' | 'bot' }
+
+async function sendMessage(message:string) {
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        prompt: message,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Erreur lors de la requête POST:', error);
+    throw error;
+  }
+}
 
 function Home() {
     const [query, setQuery] = useState('')
@@ -11,18 +36,18 @@ function Home() {
 
     const endRef = useRef<HTMLDivElement | null>(null)
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-
         const text = query.trim()
         if (!text) return
 
+        const response = await sendMessage(text)
         const userMessage: Message = { id: Date.now(), text, sender: 'user'}
         setMessages((prevMessages) => [...prevMessages, userMessage])
         setQuery('')
 
         setTimeout(() => {
-            const botMessage: Message = { id:Date.now() + 1, text: 'message envoyé', sender: 'bot' }
+            const botMessage: Message = { id:Date.now() + 1, text: response.response, sender: 'bot' }
             setMessages((prevMessages) => [...prevMessages, botMessage])
         }, 300)
     }
