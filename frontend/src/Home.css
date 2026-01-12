@@ -1,0 +1,107 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    padding: 16px 20px;  
+    flex-shrink: 0; 
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: hidden; 
+    padding: 0 20px;
+}
+
+.chatbotForm {
+    flex-shrink: 0; 
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.messages {
+    flex: 1;
+    width: 100%;
+    max-width: 800px;
+    overflow-y: auto; 
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 16px 0;
+}
+
+.message {
+    max-width: 70%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    word-break: break-word;
+    text-align: left;
+}
+
+.message.user {
+    background: #0b84ff;
+    color: white;
+    align-self: flex-end;
+}
+
+.message.bot {
+    background: #ff9b9b;
+    color: white;
+    align-self: flex-start;
+}
+
+.message.bot {
+    align-self: flex-start;
+}
+
+.empty {
+    color: #777;
+    font-size: 14px;
+    align-self: center;
+}
+
+.searchInput {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: white;
+    border: none;
+    color: black;
+    min-width: 400px;
+}
+
+.searchButton {
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: black;
+    background: white;
+}
+
+.searchButton:hover {
+    background: #cdcdcd;
+
+}
