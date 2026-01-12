@@ -1,0 +1,62 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  /* padding: 2rem; */
+  text-align: center;
+}
+
+.container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.header {
+    padding: 16px 20px;   
+}
+
+.main {
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-end;
+}
+
+.chatbotForm {
+    width: 100%;
+    gap: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 600px;
+}
+
+.searchInput {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: white;
+    border: none;
+    color: black;
+    min-width: 400px;
+}
+
+.searchButton {
+    padding: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: black;
+    background: white;
+}
+
+.searchButton:hover {
+    background: #cdcdcd;
+
+}
