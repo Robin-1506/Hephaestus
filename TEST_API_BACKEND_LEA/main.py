@@ -35,9 +35,9 @@ async def get_random():
 async def root():
     return {"message": "Hello World"}
 
-"""@app.get("/random-word")
+@app.get("/random-word")
 async def random_word_backend():
     url = "https://www.wordgamedb.com/api/v2/words/random"
     response = requests.get(url)
     data = response.json()
-    return {"random_word_backend": data["word"]}"""
+    return {"random_word_backend": data["word"]}
