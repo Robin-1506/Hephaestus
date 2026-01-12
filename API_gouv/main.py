@@ -44,6 +44,13 @@
     |   {"id": ..., "adresse": ..., "ville": ..., "prix": ..., "lat": ..., "lon": ..., "distance_km": ...},
     |   ...
     | ]
+
+python3 -m venv "Test_FastAPI”
+source Test_FastAPI/bin/activate
+pip install FastAPI
+pip install uvicorn requests
+python -m pip install geopy
+uvicorn test_API_Lea:app --port 8000 --reload
 """
 
 # On importe les modules nécessaires
@@ -57,7 +64,7 @@ from fastapi.responses import JSONResponse
 # requests : pour faire des appels HTTP à l'API externe
 import requests
 
-# geopy.distance.distance : pour calculer la distance entre deux points GPS
+# geopy.distance : pour calculer la distance entre deux points GPS
 from geopy.distance import distance
 
 # Création de l'application FastAPI
