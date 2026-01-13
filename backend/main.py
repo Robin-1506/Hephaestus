@@ -35,6 +35,8 @@ MODEL_NAME = "llama3"
 # --- Shared Models ---
 class PromptRequest(BaseModel):
     prompt: str
+    latitude: float = None  # Optionnel : latitude de l'utilisateur
+    longitude: float = None  # Optionnel : longitude de l'utilisateur
 
 class AIResponse(BaseModel):
     response: str
@@ -90,10 +92,48 @@ def health_check():
 
 @app.post("/chat", response_model=AIResponse)
 def chat_with_ollama(data: PromptRequest):
-    print(data.prompt)
+    print(f"User prompt: {data.prompt}")
+    # Mots-clés pour détecter une requête sur les stations essence
+    fuel_keywords = ["essence", "carburant", "gazole", "diesel", "sp95", "sp98", "e10", "e85", "gplc", "station", "prix"]
+    prompt_lower = data.prompt.lower()
+    
+    enriched_prompt = data.prompt
+    
+    # Vérifier si c'est une requête sur les stations essence
+    if any(keyword in prompt_lower for keyword in fuel_keywords):
+        print("Détection d'une requête sur les carburants...")
+        try:
+            # Extraire ville et type de carburant du prompt
+            extracted = embedding.extract_search_params(data.prompt)
+            
+            if extracted and "city" in extracted:
+                print(f"Paramètres extraits: {extracted}")
+                
+                # Récupérer les coordonnées
+                coords = embedding.get_coordinates(extracted["city"])
+                
+                if coords:
+                    # Récupérer les données des stations
+                    fuel_type = extracted.get("fuel_type", "Gazole")
+                    stations = embedding.fetch_fuel_data(coords['lat'], coords['lon'], fuel_type, radius_km=20)
+                    
+                    if stations:
+                        # Enrichir le prompt avec les données réelles
+                        stations_info = "Voici les stations essence trouvées:\n"
+                        for i, station in enumerate(stations[:5], 1):  # Top 5 stations
+                            stations_info += f"{i}. {station.get('address', 'Adresse inconnue')} - {station.get('city', '')} - {fuel_type}: {station.get('price', 'N/A')}€/L - Marque: {station.get('brand', 'Unknown')}\n"
+                        
+                        enriched_prompt = f"{data.prompt}\n\nContexte des stations essence disponibles:\n{stations_info}"
+                        print(f"Prompt enrichi avec {len(stations)} stations")
+        
+        except Exception as e:
+            print(f"Erreur lors de l'enrichissement du prompt: {e}")
+            # Continue sans enrichissement si erreur
+    if data.latitude is not None and data.longitude is not None:
+        enriched_prompt += f"\nL'utilisateur est situé à la latitude {data.latitude} et longitude {data.longitude}."
     payload = {
         "model": MODEL_NAME,
-        "prompt": data.prompt,
+        "prompt": enriched_prompt,
         "stream": False,
         #"temperature": 0.7,
         #"num_predict": 1024

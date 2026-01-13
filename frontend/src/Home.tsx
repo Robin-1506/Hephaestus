@@ -7,16 +7,21 @@ import './Home.css'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/chat'
 type Message = { id: number; text: string; sender: 'user' | 'bot' }
 
-async function sendMessage(message:string) {
+async function sendMessage(message:string, latitude?: number, longitude?: number) {
   try {
+    const payload: any = {
+      prompt: message,
+    }
+    
+    if (latitude !== undefined) payload.latitude = latitude
+    if (longitude !== undefined) payload.longitude = longitude
+
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        prompt: message,
-      }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -33,10 +38,26 @@ async function sendMessage(message:string) {
 
 function Home() {
     const [query, setQuery] = useState('')
-
     const [messages, setMessages] = useState<Message[]>([])
-
+    const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null)
     const endRef = useRef<HTMLDivElement | null>(null)
+
+    // Récupérer la géolocalisation au démarrage
+    useEffect(() => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    setUserLocation({
+                        lat: position.coords.latitude,
+                        lon: position.coords.longitude
+                    })
+                },
+                (error) => {
+                    console.log('Géolocalisation refusée ou indisponible:', error)
+                }
+            )
+        }
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -48,7 +69,7 @@ function Home() {
         setQuery('')
 
         try {
-            const response = await sendMessage(text)
+            const response = await sendMessage(text, userLocation?.lat, userLocation?.lon)
             const botMessage: Message = { id: Date.now() + 1, text: response.response, sender: 'bot' }
             setMessages((prevMessages) => [...prevMessages, botMessage])
         } catch (error) {

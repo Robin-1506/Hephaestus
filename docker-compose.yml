@@ -3,13 +3,15 @@ services:
     image: ollama/ollama
     container_name: ollama
     volumes:
-      - ollama:/root/.ollama
+      - ollama_data:/root/.ollama
     ports:
       - "11434:11434"
     command: ["serve"]
     restart: unless-stopped
     networks:
       - hephaestus-network
+    environment:
+      - OLLAMA_MODELS=/root/.ollama/models
 
   backend:
     build: ./backend
@@ -35,7 +37,8 @@ services:
 
 
 volumes:
-  ollama:
+  ollama_data:
+    driver: local
 
 networks:
   hephaestus-network:
