@@ -95,9 +95,18 @@ def chat_with_ollama(data: PromptRequest):
     print(f"User prompt: {data.prompt}")
     # Mots-clés pour détecter une requête sur les stations essence
     fuel_keywords = ["essence", "carburant", "gazole", "diesel", "sp95", "sp98", "e10", "e85", "gplc", "station", "prix"]
+    # Mots-clés pour détecter une demande de localisation
+    location_keywords = ["où", "localisation", "position", "coordonnées", "latitude", "longitude", "ma position", "mon adresse", "près de moi"]
+    
     prompt_lower = data.prompt.lower()
     
     enriched_prompt = data.prompt
+    
+    # Vérifier si l'utilisateur demande sa localisation
+    if any(keyword in prompt_lower for keyword in location_keywords):
+        print("Détection d'une demande de localisation...")
+        if data.latitude is not None and data.longitude is not None:
+            enriched_prompt += f"\nL'utilisateur est situé à la latitude {data.latitude} et longitude {data.longitude}."
     
     # Vérifier si c'est une requête sur les stations essence
     if any(keyword in prompt_lower for keyword in fuel_keywords):
@@ -129,8 +138,7 @@ def chat_with_ollama(data: PromptRequest):
         except Exception as e:
             print(f"Erreur lors de l'enrichissement du prompt: {e}")
             # Continue sans enrichissement si erreur
-    if data.latitude is not None and data.longitude is not None:
-        enriched_prompt += f"\nL'utilisateur est situé à la latitude {data.latitude} et longitude {data.longitude}."
+
     payload = {
         "model": MODEL_NAME,
         "prompt": enriched_prompt,

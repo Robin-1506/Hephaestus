@@ -1,9 +1,8 @@
 // src/pages/Chatbot.jsx
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 import "./Chatbot.css";
-import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
 
@@ -52,8 +51,6 @@ export default function Chatbot() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const endRef = useRef<HTMLDivElement | null>(null);
-
-  const navigate = useNavigate();
   const activeConversation = conversations.find(c => c.id === activeId);
 
   // ------------------- PERSISTENCE -------------------
@@ -107,23 +104,25 @@ useEffect(() => {
     sender: "user",
   };
 
-  let conv = activeConversation;
+  let targetConvId: string;
 
-  // Si aucune conversation n'existe, on la crée avec le message utilisateur
-  if (!conv) {
-    conv = {
+  if (!activeConversation) {
+    // Créer une nouvelle conversation
+    const newConv: Conversation = {
       id: crypto.randomUUID(),
       title: generateTitleFromMessage(query),
       messages: [userMessage],
       createdAt: Date.now(),
     };
-    setConversations(prev => [conv, ...prev]);
-    setActiveId(conv.id);
+    setConversations(prev => [newConv, ...prev]);
+    setActiveId(newConv.id);
+    targetConvId = newConv.id;
   } else {
-    // Ajoute le message à la conversation existante
+    // Ajouter à la conversation existante
+    targetConvId = activeConversation.id;
     setConversations(prev =>
       prev.map(c =>
-        c.id === conv!.id ? { ...c, messages: [...c.messages, userMessage] } : c
+        c.id === targetConvId ? { ...c, messages: [...c.messages, userMessage] } : c
       )
     );
   }
@@ -173,7 +172,7 @@ try {
 
   setConversations(prev =>
     prev.map(c =>
-      c.id === conv!.id ? { ...c, messages: [...c.messages, botMessage] } : c
+      c.id === targetConvId ? { ...c, messages: [...c.messages, botMessage] } : c
     )
   );
 } catch {
@@ -185,7 +184,7 @@ try {
 
   setConversations(prev =>
     prev.map(c =>
-      c.id === conv!.id ? { ...c, messages: [...c.messages, errorMessage] } : c
+      c.id === targetConvId ? { ...c, messages: [...c.messages, errorMessage] } : c
     )
   );
 } finally {
@@ -217,7 +216,6 @@ const deleteConversation = (id: string) => {
           src={logo}
           alt="NaviGas"
           className="sidebar-logo"
-          onClick={() => navigate("/")}
         />
 
         <button className="new-chat" onClick={createConversation}>
