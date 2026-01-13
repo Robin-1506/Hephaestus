@@ -1,3 +1,7 @@
+* {
+margin: 0;
+  padding: 0;
+}
 
 :root {
   --primary: #0f2a44;
@@ -115,12 +119,7 @@
 
 .how-it-works {
   padding: 80px;
-  background-color: #eaf2f6;
   text-align: center;
-}
-
-.how-it-works h2 {
-  background: #eaf2f6;
 }
 
 .steps {
@@ -128,16 +127,10 @@
   justify-content: center;
   gap: 40px;
   margin-top: 40px;
-  background: #eaf2f6;
 }
 
 .step {
   max-width: 250px;
-  background: #eaf2f6;
-}
-
-.step p {
-    background: #eaf2f6;
 }
 
 .step span {
@@ -150,20 +143,6 @@
   line-height: 48px;
   font-weight: bold;
   margin-bottom: 15px;
-}
-
-/* MOCKUPS */
-
-.mockups {
-  padding: 80px;
-  text-align: center;
-}
-
-.mockup-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  margin-top: 40px;
 }
 
 /* CTA */
@@ -206,10 +185,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .mockup-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
   .steps {
     flex-wrap: wrap;
     gap: 30px;
@@ -236,16 +211,11 @@
 
   .features,
   .how-it-works,
-  .mockups,
   .cta {
     padding: 50px 20px;
   }
 
   .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .mockup-grid {
     grid-template-columns: 1fr;
   }
 

@@ -66,28 +66,18 @@ export default function Home() {
         <div className="steps">
           <div className="step">
             <span>1</span>
-            <p>Lorem ipsum dolor sit amet, vous indiquez votre position.</p>
+            <p>Ouvrez le chatbot.</p>
           </div>
 
           <div className="step">
             <span>2</span>
-            <p>Lorem ipsum dolor sit amet, vous choisissez un rayon.</p>
+            <p>Indiquez votre position et le rayon de recherche.</p>
           </div>
 
           <div className="step">
             <span>3</span>
-            <p>Lorem ipsum dolor sit amet, le chatbot vous répond.</p>
+            <p>Laissez Navi faire le reste. Vous n'avez plus qu'à choisir la station qui vous convient.</p>
           </div>
-        </div>
-      </section>
-
-      <section className="mockups">
-        <h2>Aperçu de l’interface</h2>
-
-        <div className="mockup-grid">
-          <div className="image-placeholder">Mockup 1</div>
-          <div className="image-placeholder">Mockup 2</div>
-          <div className="image-placeholder">Mockup 3</div>
         </div>
       </section>
 
