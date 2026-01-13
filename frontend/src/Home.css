@@ -21,6 +21,20 @@
     flex-shrink: 0; 
 }
 
+.logo {
+    height: 100px;
+    width: auto;
+    display: block;
+    margin: 0 auto;
+}
+
+.mascotte {
+    height: 300px;
+    width: auto;
+    display: block;
+    margin: 20px auto 0 auto;
+}
+
 .main {
     flex: 1;
     display: flex;
@@ -80,6 +94,7 @@
     color: #777;
     font-size: 14px;
     align-self: center;
+    margin: auto;
 }
 
 .searchInput {
