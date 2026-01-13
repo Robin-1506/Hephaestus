@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
 
+// ------------------- TYPES -------------------
 type Message = {
   id: number;
   text: string;
@@ -20,6 +21,7 @@ type Conversation = {
   createdAt: number;
 };
 
+// ------------------- UTILITAIRES -------------------
 async function sendMessageAPI(message: string) {
   const res = await fetch(API_URL, {
     method: "POST",
@@ -31,14 +33,19 @@ async function sendMessageAPI(message: string) {
   return res.json();
 }
 
-function generateTitle(text: string): string {
-  return text
-    .replace(/[?.!]/g, "")
-    .slice(0, 40)
-    .trim() + (text.length > 40 ? "…" : "");
+function generateTitleFromMessage(message: string) {
+  const carburantMatch = message.match(/Sans Plomb \d{2}/i);
+  const carburant = carburantMatch ? carburantMatch[0] : "Recherche";
+
+  const rayonMatch = message.match(/(\d+)\s?km/i);
+  const rayon = rayonMatch ? rayonMatch[1] + "km" : "";
+
+  const position = "'votre position'";
+
+  return `${carburant}${rayon ? `, ${rayon}` : ""} de ${position}`;
 }
 
-
+// ------------------- COMPONENT -------------------
 export default function Chatbot() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -47,35 +54,39 @@ export default function Chatbot() {
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const navigate = useNavigate();
+  const activeConversation = conversations.find(c => c.id === activeId);
 
-  /* =====================
-     INIT + PERSISTENCE
-  ====================== */
-
+  // ------------------- PERSISTENCE -------------------
   useEffect(() => {
   const saved = localStorage.getItem("conversations");
   if (saved) {
-    const parsed = JSON.parse(saved);
-    setConversations(parsed);
-    setActiveId(parsed[0]?.id ?? null);
+    const parsed: Conversation[] = JSON.parse(saved);
+    if (parsed.length > 0) {
+      // On récupère l'historique et on définit la conversation active
+      setConversations(parsed);
+      setActiveId(parsed[0].id);
+    } else {
+      // Cas rare : localStorage vide → créer une nouvelle conversation
+      createConversation();
+    }
   } else {
-    // Crée une conversation par défaut si aucune sauvegarde
+    // Pas de données → créer une conversation par défaut
     createConversation();
   }
 }, []);
 
+useEffect(() => {
+  // Ne sauvegarde que les conversations qui ont au moins un message
+  const nonEmptyConversations = conversations.filter(c => c.messages.length > 0);
 
-  useEffect(() => {
-    localStorage.setItem("conversations", JSON.stringify(conversations));
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversations, activeId]);
+  if (nonEmptyConversations.length > 0) {
+    localStorage.setItem("conversations", JSON.stringify(nonEmptyConversations));
+  }
 
-  const activeConversation = conversations.find(c => c.id === activeId);
+  endRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [conversations]);
 
-  /* =====================
-     ACTIONS
-  ====================== */
-
+  // ------------------- ACTIONS -------------------
   const createConversation = () => {
     const newConv: Conversation = {
       id: crypto.randomUUID(),
@@ -83,7 +94,6 @@ export default function Chatbot() {
       messages: [],
       createdAt: Date.now(),
     };
-
     setConversations(prev => [newConv, ...prev]);
     setActiveId(newConv.id);
   };
@@ -91,127 +101,159 @@ export default function Chatbot() {
   const sendMessage = async () => {
   if (!query.trim()) return;
 
-  let conv = activeConversation;
-
-  // Si aucune conversation n'est active, on en crée une nouvelle
-  if (!conv) {
-    conv = {
-      id: crypto.randomUUID(),
-      title: "Nouvelle conversation",
-      messages: [],
-      createdAt: Date.now(),
-    };
-    setActiveId(conv.id);
-    // On met à jour les conversations directement avec cette nouvelle conversation
-    setConversations(prev => [conv, ...prev]);
-  }
-
-  // Crée le message utilisateur
   const userMessage: Message = {
     id: Date.now(),
     text: query,
     sender: "user",
   };
 
-  // Ajoute le message à la conversation
-  const updatedMessages = [...conv.messages, userMessage];
+  let conv = activeConversation;
 
-  // Met à jour la conversation dans le state
-  setConversations(prev =>
-    prev.map(c =>
-      c.id === conv!.id ? { ...c, messages: updatedMessages } : c
-    )
-  );
+  // Si aucune conversation n'existe, on la crée avec le message utilisateur
+  if (!conv) {
+    conv = {
+      id: crypto.randomUUID(),
+      title: generateTitleFromMessage(query),
+      messages: [userMessage],
+      createdAt: Date.now(),
+    };
+    setConversations(prev => [conv, ...prev]);
+    setActiveId(conv.id);
+  } else {
+    // Ajoute le message à la conversation existante
+    setConversations(prev =>
+      prev.map(c =>
+        c.id === conv!.id ? { ...c, messages: [...c.messages, userMessage] } : c
+      )
+    );
+  }
 
   setQuery("");
   setLoading(true);
 
-  try {
-    const res = await sendMessageAPI(query);
-    const botMessage: Message = {
-      id: Date.now() + 1,
-      text: res.response,
-      sender: "bot",
-    };
+//   try {
+//     const res = await sendMessageAPI(query);
+//     const botMessage: Message = {
+//       id: Date.now() + 1,
+//       text: res.response,
+//       sender: "bot",
+//     };
 
-    const finalMessages = [...updatedMessages, botMessage];
+//     // Ajoute la réponse du bot au dernier state (pas de duplication du message utilisateur)
+//     setConversations(prev =>
+//       prev.map(c =>
+//         c.id === conv!.id ? { ...c, messages: [...c.messages, botMessage] } : c
+//       )
+//     );
+//   } catch {
+//     const errorMessage: Message = {
+//       id: Date.now() + 1,
+//       text: "Oups 😕 Une erreur est survenue.",
+//       sender: "bot",
+//     };
 
-    setConversations(prev =>
-      prev.map(c =>
-        c.id === conv!.id ? { ...c, messages: finalMessages } : c
-      )
-    );
-  } catch {
-    const errorMessage: Message = {
-      id: Date.now() + 1,
-      text: "Oups 😕 Une erreur est survenue.",
-      sender: "bot",
-    };
+//     setConversations(prev =>
+//       prev.map(c =>
+//         c.id === conv!.id ? { ...c, messages: [...c.messages, errorMessage] } : c
+//       )
+//     );
+//   } finally {
+//     setLoading(false);
+//   }
+try {
+  // Simule un délai de réflexion de 2 secondes
+  await new Promise(resolve => setTimeout(resolve, 2000));
 
-    setConversations(prev =>
-      prev.map(c =>
-        c.id === conv!.id
-          ? { ...c, messages: [...updatedMessages, errorMessage] }
-          : c
-      )
-    );
-  } finally {
-    setLoading(false);
-  }
+  const res = await sendMessageAPI(query);
+  const botMessage: Message = {
+    id: Date.now() + 1,
+    text: res.response,
+    sender: "bot",
+  };
+
+  setConversations(prev =>
+    prev.map(c =>
+      c.id === conv!.id ? { ...c, messages: [...c.messages, botMessage] } : c
+    )
+  );
+} catch {
+  const errorMessage: Message = {
+    id: Date.now() + 1,
+    text: "Oups 😕 Une erreur est survenue.",
+    sender: "bot",
+  };
+
+  setConversations(prev =>
+    prev.map(c =>
+      c.id === conv!.id ? { ...c, messages: [...c.messages, errorMessage] } : c
+    )
+  );
+} finally {
+  setLoading(false);
+}
+
+};
+
+const deleteConversation = (id: string) => {
+  setConversations(prev => {
+    const filtered = prev.filter(c => c.id !== id);
+
+    // Si on supprime la conversation active, on change activeId
+    if (id === activeId) {
+      setActiveId(filtered[0]?.id ?? null);
+    }
+
+    return filtered;
+  });
 };
 
 
-
-  const updateConversation = (messages: Message[], updateTitle = false) => {
-    setConversations(prev =>
-      prev.map(c =>
-        c.id === activeId
-          ? {
-              ...c,
-              messages,
-              title:
-                updateTitle && c.messages.length === 0
-                    ? generateTitle(messages[0].text)
-                    : c.title,
-
-            }
-          : c
-      )
-    );
-  };
-
-  /* =====================
-     RENDER
-  ====================== */
-
+  // ------------------- RENDER -------------------
   return (
     <div className="chat-layout">
       {/* SIDEBAR */}
       <aside className="sidebar">
-        <img src={logo} alt="NaviGas" className="sidebar-logo" onClick={() => navigate("/")} />
+        <img
+          src={logo}
+          alt="NaviGas"
+          className="sidebar-logo"
+          onClick={() => navigate("/")}
+        />
 
         <button className="new-chat" onClick={createConversation}>
           + Nouvelle conversation
         </button>
 
         <div className="conversation-list">
-          {conversations.map(c => (
-            <div
-              key={c.id}
-              className={`conversation-item ${c.id === activeId ? "active" : ""}`}
-              onClick={() => setActiveId(c.id)}
-              title={c.title}
-            >
-              {c.title}
-            </div>
-          ))}
-        </div>
+  {conversations.map(c => (
+    <div
+      key={c.id}
+      className={`conversation-item ${c.id === activeId ? "active" : ""}`}
+      title={c.title}
+    >
+      <span
+        className="conversation-title"
+        onClick={() => setActiveId(c.id)}
+      >
+        {c.title}
+      </span>
+      
+      <button
+        className="delete-btn"
+        onClick={() => deleteConversation(c.id)}
+        title="Supprimer"
+      >
+        🗑
+      </button>
+    </div>
+  ))}
+</div>
       </aside>
 
       {/* CHAT */}
       <main className="chat">
         <div className="messages">
-          {activeConversation?.messages.length === 0 && (
+          {(!activeConversation || activeConversation.messages.length === 0) && (
             <div className="empty">
               <img src={mascotte} alt="Navi" />
               <p>"Aide-moi à trouver du Sans Plomb 95 dans un rayon de 5km."</p>
@@ -229,7 +271,9 @@ export default function Chatbot() {
             <div className="message bot">
               <img src={mascotte} alt="bot" />
               <div className="bubble typing">
-                <span></span><span></span><span></span>
+                <span></span>
+                <span></span>
+                <span></span>
               </div>
             </div>
           )}
@@ -239,14 +283,14 @@ export default function Chatbot() {
 
         <form
           className="input-bar"
-          onSubmit={(e) => {
+          onSubmit={e => {
             e.preventDefault();
             sendMessage();
           }}
         >
           <input
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={e => setQuery(e.target.value)}
             placeholder="Ex : stations à moins de 5km..."
           />
           <button disabled={!query.trim()}>➤</button>
