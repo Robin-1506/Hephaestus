@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 
 import logo from './assets/NaviGas.png'
-import mascotte from './assets/Navi.png'
 
 import './Home.css'
 
@@ -44,15 +43,18 @@ function Home() {
         const text = query.trim()
         if (!text) return
 
-        const response = await sendMessage(text)
         const userMessage: Message = { id: Date.now(), text, sender: 'user'}
         setMessages((prevMessages) => [...prevMessages, userMessage])
         setQuery('')
 
-        setTimeout(() => {
-            const botMessage: Message = { id:Date.now() + 1, text: response.response, sender: 'bot' }
+        try {
+            const response = await sendMessage(text)
+            const botMessage: Message = { id: Date.now() + 1, text: response.response, sender: 'bot' }
             setMessages((prevMessages) => [...prevMessages, botMessage])
-        }, 300)
+        } catch (error) {
+            const errorMessage: Message = { id: Date.now() + 1, text: "Erreur lors de la communication avec le serveur", sender: 'bot' }
+            setMessages((prevMessages) => [...prevMessages, errorMessage])
+        }
     }
 
     useEffect(() => {
