@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 import "./Chatbot.css";
-import { useNavigate } from "react-router";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
 
@@ -253,7 +252,7 @@ const deleteConversation = (id: string) => {
           src={logo}
           alt="NaviGas"
           className="sidebar-logo"
-          onClick={() => navigate("/")}
+          onClick={() => document.location.href = "/"}
         />
 
         <button className="new-chat" onClick={createConversation}>
