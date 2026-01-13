@@ -92,9 +92,7 @@ def get_stations(
     top_n: int = Query(5, description="Nombre de stations les moins chères à retourner")
 ):
     try:
-        # -------------------------------
         # 1. Préparer les paramètres pour l'API externe
-        # -------------------------------
         # On filtre directement côté API pour ne pas récupérer des milliers de stations inutiles
         params = {
             "dataset": "prix-des-carburants-en-france-flux-instantane-v2",  # nom du dataset
@@ -103,16 +101,12 @@ def get_stations(
             "geofilter.distance": f"{lat},{lon},{rayon_km*1000}"  # rayon en mètres
         }
 
-        # -------------------------------
         # 2. Appel à l'API externe
-        # -------------------------------
         response = requests.get(API_URL, params=params)
         response.raise_for_status()  # déclenche une erreur si le serveur répond mal
         data = response.json().get("records", [])  # on récupère les stations
 
-        # -------------------------------
         # 3. Filtrage et traitement côté serveur
-        # -------------------------------
         stations = []
 
         for station in data:
@@ -148,14 +142,10 @@ def get_stations(
                     "distance_km": round(dist_km, 2)     # distance arrondie
                 })
 
-        # -------------------------------
         # 4. Trier les stations par prix croissant
-        # -------------------------------
         stations_sorted = sorted(stations, key=lambda x: x["prix"])[:top_n]
 
-        # -------------------------------
         # 5. Retourner la réponse en JSON
-        # -------------------------------
         return JSONResponse(content=stations_sorted)
     
     except requests.RequestException as e:
