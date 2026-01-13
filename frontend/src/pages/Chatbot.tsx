@@ -224,11 +224,13 @@ export default function Chatbot() {
     }
   };
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // ------------------- RENDER -------------------
   return (
     <div className="chat-layout">
       {/* SIDEBAR */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <img
           src={logo}
           alt="NaviGas"
@@ -266,8 +268,16 @@ export default function Chatbot() {
         </div>
       </aside>
 
+      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
+
       {/* CHAT */}
       <main className="chat">
+        <button
+  className="sidebar-toggle"
+  onClick={() => setSidebarOpen(true)}
+>
+  ☰
+</button>
         <div className="messages">
           {(!activeConversation ||
             activeConversation.messages.length === 0) && (
