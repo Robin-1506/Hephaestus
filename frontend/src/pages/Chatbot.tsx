@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 import "./Chatbot.css";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
 
