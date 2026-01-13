@@ -1,9 +1,10 @@
-// src/pages/Home.jsx
+import { useNavigate } from "react-router-dom";
 import "./Home.css";
 
 import mascotte from '../assets/Navi.png';
 
 export default function Home() {
+  const navigate = useNavigate();
 
   return (
     <div className="homepage">
@@ -16,7 +17,7 @@ export default function Home() {
           <p>
             Rien de plus simple : indiquez votre position et le rayon de recherche, et laissez le chatbot faire le reste.
           </p>
-          <button>
+          <button onClick={() => navigate("/chatbot")}>
             Découvrir le chatbot
           </button>
         </div>
@@ -64,24 +65,24 @@ export default function Home() {
         <div className="steps">
           <div className="step">
             <span>1</span>
-            <p>Ouvrez le chatbot.</p>
+            <p>Lorem ipsum dolor sit amet, vous indiquez votre position.</p>
           </div>
 
           <div className="step">
             <span>2</span>
-            <p>Indiquez votre position et le rayon de recherche.</p>
+            <p>Lorem ipsum dolor sit amet, vous choisissez un rayon.</p>
           </div>
 
           <div className="step">
             <span>3</span>
-            <p>Laissez Navi faire le reste. Vous n'avez plus qu'à choisir la station qui vous convient.</p>
+            <p>Lorem ipsum dolor sit amet, le chatbot vous répond.</p>
           </div>
         </div>
       </section>
 
       <section className="cta">
         <h2>Prêt à trouver une station près de vous ?</h2>
-        <button>
+        <button onClick={() => navigate("/chatbot")}>
           Tester le chatbot
         </button>
       </section>
