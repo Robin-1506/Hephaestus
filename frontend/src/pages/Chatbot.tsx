@@ -21,11 +21,18 @@ type Conversation = {
 };
 
 // ------------------- UTILITAIRES -------------------
-async function sendMessageAPI(message: string) {
+async function sendMessageAPI(message: string, latitude?: number, longitude?: number) {
+  const payload: any = {
+    prompt: message,
+  };
+
+  if (latitude !== undefined) payload.latitude = latitude;
+  if (longitude !== undefined) payload.longitude = longitude;
+
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt: message }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) throw new Error("API error");
@@ -50,10 +57,39 @@ export default function Chatbot() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [userLocation, setUserLocation] = useState<{lat: number, lon: number} | null>(null);
+  const [locationStatus, setLocationStatus] = useState<'unknown' | 'requesting' | 'granted' | 'denied'>('unknown');
   const endRef = useRef<HTMLDivElement | null>(null);
 
-  const navigate = useNavigate();
   const activeConversation = conversations.find(c => c.id === activeId);
+
+  // Fonction pour demander la géolocalisation
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationStatus('denied');
+      return;
+    }
+
+    setLocationStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({
+          lat: position.coords.latitude,
+          lon: position.coords.longitude
+        });
+        setLocationStatus('granted');
+      },
+      (error) => {
+        console.log('Géolocalisation refusée ou indisponible:', error);
+        setLocationStatus('denied');
+      }
+    );
+  };
+
+  // Récupérer la géolocalisation au démarrage
+  useEffect(() => {
+    requestLocation();
+  }, []);
 
   // ------------------- PERSISTENCE -------------------
   useEffect(() => {
@@ -164,7 +200,7 @@ try {
   // Simule un délai de réflexion de 2 secondes
   await new Promise(resolve => setTimeout(resolve, 2000));
 
-  const res = await sendMessageAPI(query);
+  const res = await sendMessageAPI(query, userLocation?.lat, userLocation?.lon);
   const botMessage: Message = {
     id: Date.now() + 1,
     text: res.response,
@@ -293,6 +329,36 @@ const deleteConversation = (id: string) => {
             onChange={e => setQuery(e.target.value)}
             placeholder="Ex : stations à moins de 5km..."
           />
+          {locationStatus !== 'granted' && (
+            <button
+              type="button"
+              onClick={requestLocation}
+              style={{
+                padding: '8px 12px',
+                backgroundColor: '#ff6b35',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              📍 Localisation
+            </button>
+          )}
+          {locationStatus === 'granted' && (
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: '#4caf50',
+              color: 'white',
+              borderRadius: '4px',
+              fontSize: '12px',
+              whiteSpace: 'nowrap'
+            }}>
+              ✓ Localisé
+            </div>
+          )}
           <button disabled={!query.trim()}>➤</button>
         </form>
       </main>
