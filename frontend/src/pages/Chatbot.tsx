@@ -9,6 +9,7 @@ import { sendMessageAPI } from "../api/chatApi";
 import ChatSidebar from "../components/ChatSidebar";
 import { useConversations } from "../hooks/useConversations";
 import { useGeolocation } from "../hooks/useGeolocation";
+import LocationButton from "../components/LocationButton";
 
 // ------------------- COMPONENT -------------------
 export default function Chatbot() {
@@ -133,41 +134,22 @@ export default function Chatbot() {
         </div>
 
         <form
-          className="input-bar"
-          onSubmit={e => {
-            e.preventDefault();
-            sendMessage();
-          }}
-        >
-          <input
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Ex : stations à moins de 5km..."
-          />
+  className="input-bar"
+  onSubmit={e => {
+    e.preventDefault();
+    sendMessage();
+  }}
+>
+  <input
+    value={query}
+    onChange={e => setQuery(e.target.value)}
+    placeholder="Ex : stations à moins de 5km..."
+  />
 
-          {locationStatus !== "granted" ? (
-            <button
-              type="button"
-              onClick={requestLocation}
-              disabled={locationStatus === "requesting"}
-              className={`location-btn ${locationStatus}`}
-            >
-              {locationStatus === "requesting"
-                ? "📍 Localisation..."
-                : "📍 Activer la localisation"}
-            </button>
-          ) : (
-            <div className="location-ok">✓ Localisé</div>
-          )}
+  <LocationButton status={locationStatus} onRequest={requestLocation} />
 
-          {locationStatus === "denied" && (
-            <div className="location-help">
-              📍 Autorisez la localisation dans votre navigateur
-            </div>
-          )}
-
-          <button disabled={!query.trim() || loading}>➤</button>
-        </form>
+  <button disabled={!query.trim() || loading}>➤</button>
+</form>
       </main>
     </div>
   );
