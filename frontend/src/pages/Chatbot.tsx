@@ -2,22 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 import "./Chatbot.css";
+import type { Message, Conversation } from "../types/chat";
+
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
 
-// ------------------- TYPES -------------------
-type Message = {
-  id: number;
-  text: string;
-  sender: "user" | "bot";
-};
 
-type Conversation = {
-  id: string;
-  title: string;
-  messages: Message[];
-  createdAt: number;
-};
 
 // ------------------- API -------------------
 async function sendMessageAPI(
