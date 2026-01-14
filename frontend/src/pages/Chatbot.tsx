@@ -1,33 +1,12 @@
 import { useEffect, useRef, useState } from "react";
+
 import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
+
 import "./Chatbot.css";
+
 import type { Message, Conversation } from "../types/chat";
-
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/chat";
-
-
-
-// ------------------- API -------------------
-async function sendMessageAPI(
-  message: string,
-  latitude?: number,
-  longitude?: number
-) {
-  const payload: any = { prompt: message };
-  if (latitude !== undefined) payload.latitude = latitude;
-  if (longitude !== undefined) payload.longitude = longitude;
-
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
-
-  if (!res.ok) throw new Error("API error");
-  return res.json();
-}
+import { sendMessageAPI } from "../api/chatApi";
 
 // ------------------- UTILS -------------------
 function generateTitleFromMessage(message: string) {
