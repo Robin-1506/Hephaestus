@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import mascotte from "../assets/Navi.png";
 
@@ -8,6 +8,7 @@ import type { Message } from "../types/chat";
 import { sendMessageAPI } from "../api/chatApi";
 import ChatSidebar from "../components/ChatSidebar";
 import { useConversations } from "../hooks/useConversations";
+import { useGeolocation } from "../hooks/useGeolocation";
 
 
 
@@ -28,46 +29,48 @@ export default function Chatbot() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lon: number;
-  } | null>(null);
+  // const [userLocation, setUserLocation] = useState<{
+  //   lat: number;
+  //   lon: number;
+  // } | null>(null);
 
-  const [locationStatus, setLocationStatus] = useState<
-    "unknown" | "requesting" | "granted" | "denied"
-  >("unknown");
+  // const [locationStatus, setLocationStatus] = useState<
+  //   "unknown" | "requesting" | "granted" | "denied"
+  // >("unknown");
 
   const endRef = useRef<HTMLDivElement | null>(null);
 
   // ------------------- GEOLOCATION -------------------
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationStatus("denied");
-      return;
-    }
+  // const requestLocation = () => {
+  //   if (!navigator.geolocation) {
+  //     setLocationStatus("denied");
+  //     return;
+  //   }
 
-    setLocationStatus("requesting");
+  //   setLocationStatus("requesting");
 
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        setUserLocation({
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-        });
-        setLocationStatus("granted");
-      },
-      error => {
-        console.error("Erreur géolocalisation :", error);
-        setLocationStatus(
-          error.code === error.PERMISSION_DENIED ? "denied" : "unknown"
-        );
-      }
-    );
-  };
+  //   navigator.geolocation.getCurrentPosition(
+  //     position => {
+  //       setUserLocation({
+  //         lat: position.coords.latitude,
+  //         lon: position.coords.longitude,
+  //       });
+  //       setLocationStatus("granted");
+  //     },
+  //     error => {
+  //       console.error("Erreur géolocalisation :", error);
+  //       setLocationStatus(
+  //         error.code === error.PERMISSION_DENIED ? "denied" : "unknown"
+  //       );
+  //     }
+  //   );
+  // };
 
-  useEffect(() => {
-    requestLocation();
-  }, []);
+  // useEffect(() => {
+  //   requestLocation();
+  // }, []);
+
+  const { location: userLocation, status: locationStatus, requestLocation } = useGeolocation();
 
   const sendMessage = async () => {
   if (!query.trim() || loading || !activeId) return;
