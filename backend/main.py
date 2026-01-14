@@ -3,6 +3,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import os
+import re
+
+def extract_radius(prompt: str, default_radius: float = 15) -> float:
+    """
+    Extrait le rayon en km depuis le texte. 
+    Si aucun rayon trouvé, retourne default_radius.
+    """
+    match = re.search(r"(\d+(?:\.\d+)?)\s*(?:km|kilom[eè]tres?)", prompt.lower())
+    if match:
+        return float(match.group(1))
+    return default_radius
 
 # --- Services internes ---
 from fuel_service import fetch_stations
@@ -73,19 +84,55 @@ def chat_with_ollama(data: PromptRequest):
         ]
 
         is_near_me = any(k in prompt_lower for k in near_me_keywords)
+        
+        # -------- Localisation --------
+        search_lat = None
+        search_lon = None
 
-        # -------- Localisation obligatoire --------
-        if is_near_me:
-            if data.latitude is None or data.longitude is None:
+        # Extraire la ville ou l'adresse du prompt
+        def extract_city(prompt: str):
+            prompt = prompt.lower()
+            # à <ville>
+            match = re.search(r"\bà ([A-Za-zÀ-ÿ \-]+?)(?:\s|$)", prompt)
+            if match:
+                return match.group(1).strip()
+            # autour de <ville>
+            match = re.search(r"\bautour de ([A-Za-zÀ-ÿ \-]+?)(?:\s|$)", prompt)
+            if match:
+                return match.group(1).strip()
+            # autour <ville> (sans "de")
+            match = re.search(r"\bautour ([A-Za-zÀ-ÿ \-]+?)(?:\s|$)", prompt)
+            if match:
+                return match.group(1).strip()
+            # près de <ville>
+            match = re.search(r"\bprès de ([A-Za-zÀ-ÿ \-]+?)(?:\s|$)", prompt)
+            if match:
+                return match.group(1).strip()
+            return None
+
+        city_name = extract_city(data.prompt)
+
+        # Géocoder la ville si trouvée
+        coords = None
+        if city_name:
+            coords = embedding.get_coordinates(city_name)  # ou geocode_location(city_name)
+            if coords is None:
                 return AIResponse(
-                    response="❌ Pour chercher autour de vous, j’ai besoin de votre position."
+                    response=f"❌ Impossible de trouver la ville '{city_name}'."
                 )
-            search_lat = data.latitude
-            search_lon = data.longitude
-        else:
-            return AIResponse(
-                response="❌ Précisez si vous cherchez une station *autour de vous*."
-            )
+
+        # Si pas de ville extraite, fallback sur latitude/longitude fournie
+        if coords is None:
+            if data.latitude is not None and data.longitude is not None:
+                coords = {"lat": data.latitude, "lon": data.longitude}
+            else:
+                return AIResponse(
+                    response="❌ Impossible de déterminer la localisation. Précisez la ville, l'adresse ou votre position."
+                )
+
+        # On a maintenant les coordonnées à utiliser pour la recherche
+        search_lat = coords['lat']
+        search_lon = coords['lon']
 
         # -------- Type de carburant --------
         fuel_type = "Gazole"
@@ -99,11 +146,12 @@ def chat_with_ollama(data: PromptRequest):
             fuel_type = "E85"
 
         # -------- Appel API carburant --------
+        radius_km = extract_radius(data.prompt, default_radius=15)
         stations = fetch_stations(
             lat=search_lat,
             lon=search_lon,
             carburant=fuel_type,
-            rayon_km=15,
+            rayon_km=radius_km,
             top_n=5
         )
 
@@ -111,7 +159,7 @@ def chat_with_ollama(data: PromptRequest):
             return AIResponse(
                 response=f"Aucune station {fuel_type} trouvée autour de vous."
             )
-
+        
         # -------- Réponse FACTUELLE --------
         best = stations[0]
 
