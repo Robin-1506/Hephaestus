@@ -1,18 +1,16 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware # Added this import as it is required for CORS
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import requests
 import os
-import time
 
-# --- From Embedding Branch ---
-# IMPORTANT: Ensure this matches your file name (embedding.py)
-import embedding 
+# --- Services internes ---
+from fuel_service import fetch_stations
+import embedding
 
-app = FastAPI()
+app = FastAPI(title="Ollama + Carburant API")
 
-# --- From Main Branch: Configuration ---
-# CORS
+# --- CORS ---
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -21,150 +19,133 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Ollama config ---
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "ollama:11434")
-# Add http:// if missing
 if not OLLAMA_HOST.startswith("http"):
     OLLAMA_BASE_URL = f"http://{OLLAMA_HOST}"
-    OLLAMA_URL = f"{OLLAMA_BASE_URL}/api/generate"
 else:
     OLLAMA_BASE_URL = OLLAMA_HOST
-    OLLAMA_URL = f"{OLLAMA_HOST}/api/generate"
 
+OLLAMA_URL = f"{OLLAMA_BASE_URL}/api/generate"
 MODEL_NAME = "llama3"
 
-# --- Shared Models ---
+# --- Models ---
 class PromptRequest(BaseModel):
     prompt: str
-    latitude: float = None  # Optionnel : latitude de l'utilisateur
-    longitude: float = None  # Optionnel : longitude de l'utilisateur
+    latitude: float | None = None
+    longitude: float | None = None
 
 class AIResponse(BaseModel):
     response: str
 
-# --- From Main Branch: Helpers ---
-def ensure_model_pulled():
-    """Ensure the model is pulled, pull it if necessary."""
-    try:
-        pull_url = f"{OLLAMA_BASE_URL}/api/pull"
-        payload = {"name": MODEL_NAME}
-        print(f"Pulling model {MODEL_NAME}...")
-        response = requests.post(pull_url, json=payload, timeout=600)
-        if response.status_code in [200, 201]:
-            print(f"Model {MODEL_NAME} pulled successfully")
-            return True
-        else:
-            print(f"Pull failed with status {response.status_code}")
-            return False
-    except Exception as e:
-        print(f"Pull error: {str(e)}")
-        return False
-    
-    return False
-
-# --- From Embedding Branch: New Feature ---
-@app.post("/find-fuel")
-def find_fuel(data: PromptRequest):
-    print(f"Analyzing: {data.prompt}")
-    
-    # 1. Ask Ollama (Make sure "qwen3" is the right name or use MODEL_NAME if you want to share)
-    # Note: You are using "qwen3:0.6b" here specifically for embedding/extraction
-    extracted = embedding.extract_search_params(data.prompt, model_name="qwen3:0.6b")
-    
-    if not extracted or "city" not in extracted:
-        raise HTTPException(status_code=400, detail="AI could not understand the city or fuel.")
-
-    # 2. Get Coordinates
-    coords = embedding.get_coordinates(extracted["city"])
-    if not coords:
-        raise HTTPException(status_code=404, detail="City not found.")
-
-    # 3. Get Prices
-    stations = embedding.fetch_fuel_data(
-        coords['lat'], coords['lon'], extracted.get("fuel_type", "Gazole")
-    )
-
-    return {"analysis": extracted, "results": stations}
-
-# --- From Main Branch: Existing Features ---
+# --- Health check ---
 @app.get("/")
-def health_check():
-    return {"status": "Ollama FastAPI backend running"}
+def health():
+    return {"status": "OK"}
 
+# ==========================================================
+# ======================== CHAT =============================
+# ==========================================================
 @app.post("/chat", response_model=AIResponse)
 def chat_with_ollama(data: PromptRequest):
-    print(f"User prompt: {data.prompt}")
-    # Mots-clés pour détecter une requête sur les stations essence
-    fuel_keywords = ["essence", "carburant", "gazole", "diesel", "sp95", "sp98", "e10", "e85", "gplc", "station", "prix"]
-    # Mots-clés pour détecter une demande de localisation
-    location_keywords = ["où", "localisation", "position", "coordonnées", "latitude", "longitude", "ma position", "mon adresse", "près de moi"]
-    
-    prompt_lower = data.prompt.lower()
-    
-    enriched_prompt = data.prompt
-    
-    # Vérifier si l'utilisateur demande sa localisation
-    if any(keyword in prompt_lower for keyword in location_keywords):
-        print("Détection d'une demande de localisation...")
-        if data.latitude is not None and data.longitude is not None:
-            enriched_prompt += f"\nL'utilisateur est situé à la latitude {data.latitude} et longitude {data.longitude}."
-    
-    # Vérifier si c'est une requête sur les stations essence
-    if any(keyword in prompt_lower for keyword in fuel_keywords):
-        print("Détection d'une requête sur les carburants...")
-        try:
-            # Extraire ville et type de carburant du prompt
-            extracted = embedding.extract_search_params(data.prompt)
-            
-            if extracted and "city" in extracted:
-                print(f"Paramètres extraits: {extracted}")
-                
-                # Récupérer les coordonnées
-                coords = embedding.get_coordinates(extracted["city"])
-                
-                if coords:
-                    # Récupérer les données des stations
-                    fuel_type = extracted.get("fuel_type", "Gazole")
-                    stations = embedding.fetch_fuel_data(coords['lat'], coords['lon'], fuel_type, radius_km=20)
-                    
-                    if stations:
-                        # Enrichir le prompt avec les données réelles
-                        stations_info = "Voici les stations essence trouvées:\n"
-                        for i, station in enumerate(stations[:5], 1):  # Top 5 stations
-                            stations_info += f"{i}. {station.get('address', 'Adresse inconnue')} - {station.get('city', '')} - {fuel_type}: {station.get('price', 'N/A')}€/L - Marque: {station.get('brand', 'Unknown')}\n"
-                        
-                        enriched_prompt = f"{data.prompt}\n\nContexte des stations essence disponibles:\n{stations_info}"
-                        print(f"Prompt enrichi avec {len(stations)} stations")
-        
-        except Exception as e:
-            print(f"Erreur lors de l'enrichissement du prompt: {e}")
-            # Continue sans enrichissement si erreur
 
+    prompt_lower = data.prompt.lower()
+
+    # -------- Détection carburant --------
+    fuel_keywords = [
+        "essence", "carburant", "gazole", "diesel",
+        "sp95", "sp98", "e10", "e85",
+        "station", "prix", "moins chère"
+    ]
+
+    is_fuel_request = any(k in prompt_lower for k in fuel_keywords)
+
+    # ======================================================
+    # CAS 1 : REQUÊTE STATION ESSENCE (MODE STRICT)
+    # ======================================================
+    if is_fuel_request:
+
+        # -------- Détection localisation --------
+        near_me_keywords = [
+            "autour de moi", "près de moi", "pres de moi",
+            "à côté de moi", "a coté de moi",
+            "ma position", "là où je suis"
+        ]
+
+        is_near_me = any(k in prompt_lower for k in near_me_keywords)
+
+        # -------- Localisation obligatoire --------
+        if is_near_me:
+            if data.latitude is None or data.longitude is None:
+                return AIResponse(
+                    response="❌ Pour chercher autour de vous, j’ai besoin de votre position."
+                )
+            search_lat = data.latitude
+            search_lon = data.longitude
+        else:
+            return AIResponse(
+                response="❌ Précisez si vous cherchez une station *autour de vous*."
+            )
+
+        # -------- Type de carburant --------
+        fuel_type = "Gazole"
+        if "sp98" in prompt_lower:
+            fuel_type = "SP98"
+        elif "sp95" in prompt_lower:
+            fuel_type = "SP95"
+        elif "e10" in prompt_lower:
+            fuel_type = "E10"
+        elif "e85" in prompt_lower:
+            fuel_type = "E85"
+
+        # -------- Appel API carburant --------
+        stations = fetch_stations(
+            lat=search_lat,
+            lon=search_lon,
+            carburant=fuel_type,
+            rayon_km=15,
+            top_n=5
+        )
+
+        if not stations:
+            return AIResponse(
+                response=f"Aucune station {fuel_type} trouvée autour de vous."
+            )
+
+        # -------- Réponse FACTUELLE --------
+        best = stations[0]
+
+        response_text = (
+            f"🚗 Station {fuel_type} la moins chère autour de vous :\n\n"
+            f"📍 {best['address']} – {best['city']}\n"
+            f"💰 Prix : {best['price']} €/L\n"
+            f"📏 Distance : {best['distance_km']} km\n\n"
+            f"Autres stations proches :\n"
+        )
+
+        for i, s in enumerate(stations[1:], 1):
+            response_text += (
+                f"{i}. {s['address']} ({s['city']}) – "
+                f"{s['price']} €/L – {s['distance_km']} km\n"
+            )
+
+        # 🚫 AUCUN APPEL OLLAMA ICI
+        return AIResponse(response=response_text)
+
+    # ======================================================
+    # CAS 2 : AUTRE DEMANDE → OLLAMA NORMAL
+    # ======================================================
     payload = {
         "model": MODEL_NAME,
-        "prompt": enriched_prompt,
-        "stream": False,
-        #"temperature": 0.7,
-        #"num_predict": 1024
+        "prompt": data.prompt,
+        "stream": False
     }
 
     try:
         response = requests.post(OLLAMA_URL, json=payload, timeout=600)
-        
-        # If model not found, try to pull it
-        if response.status_code == 404:
-            print(f"Model {MODEL_NAME} not found, attempting to pull...")
-            if ensure_model_pulled():
-                # Retry the request after pulling
-                response = requests.post(OLLAMA_URL, json=payload, timeout=120)
-            else:
-                return AIResponse(response=f"Erreur: Impossible de télécharger le modèle {MODEL_NAME}")
-        
         response.raise_for_status()
-
         result = response.json()
-        print("Réponse brute Ollama:", result)
-
-        return AIResponse(response=result.get("response", "Réponse vide"))
+        return AIResponse(response=result.get("response", ""))
 
     except Exception as e:
         return AIResponse(response=f"Erreur Ollama: {str(e)}")

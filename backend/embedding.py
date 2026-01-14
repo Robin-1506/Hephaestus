@@ -3,8 +3,8 @@ import json
 import logging
 
 # --- CONFIGURATION ---
-# "host.docker.internal" lets Docker talk to your Windows/Mac computer
-OLLAMA_URL = "http://host.docker.internal:11434/api/generate"
+# Docker networking: use 'ollama' service name (Linux/Docker) or 'host.docker.internal' (Windows/Mac)
+OLLAMA_URL = "http://ollama:11434/api/generate"
 
 # Government APIs
 GEO_API_URL = "https://api-adresse.data.gouv.fr/search/"
