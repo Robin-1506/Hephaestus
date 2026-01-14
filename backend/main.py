@@ -4,9 +4,10 @@ from pydantic import BaseModel
 import requests
 import os
 import re
+from fuel_service import fetch_stations
 
 # ======================================================
-# ================== HELPERS ===========================
+# ================== HELPERS ==========================
 # ======================================================
 
 def extract_radius(prompt: str, default_radius: float = 15) -> float:
@@ -66,10 +67,8 @@ def geocode_location(location: str):
 
 
 # ======================================================
-# ================== APP ===============================
+# ================== APP ==============================
 # ======================================================
-
-from fuel_service import fetch_stations
 
 app = FastAPI(title="Ollama + Carburant API")
 
@@ -103,7 +102,7 @@ def health():
 
 
 # ======================================================
-# ================== CHAT ==============================
+# ================== CHAT =============================
 # ======================================================
 
 @app.post("/chat", response_model=AIResponse)
@@ -112,9 +111,49 @@ def chat_with_ollama(data: PromptRequest):
     prompt_lower = data.prompt.lower()
 
     fuel_keywords = [
-        "essence", "carburant", "gazole", "diesel",
-        "sp95", "sp98", "e10", "e85",
-        "station", "prix", "moins chère"
+    # Carburants (général)
+    "carburant", "carburants", "fuel", "essence", "diesel", "gazole", "gasoil",
+    "sans plomb", "sans-plomb", "plomb", "super",
+
+    # Types essence
+    "sp95", "sp 95", "sp98", "sp 98", "e10", "e-10", "e85", "bioéthanol",
+    "ethanol", "éthanol",
+
+    # Diesel & dérivés
+    "diesel+", "diesel plus", "gazole+", "gazole plus",
+    "diesel premium", "gazole premium",
+
+    # Énergies alternatives
+    "gpl", "gplc", "gaz", "gaz naturel", "gnv",
+    "électrique", "electric", "borne", "borne de recharge",
+    "recharge", "recharger", "chargeur", "superchargeur",
+    "hydrogène", "h2",
+
+    # Stations-service
+    "station", "station-service", "station service", "pompe", "pompes",
+    "pompe à essence", "pompe essence",
+    "aire d'autoroute", "aire de service",
+
+    # Marques courantes
+    "total", "totalenergies", "total énergie",
+    "shell", "esso", "bp",
+    "carrefour", "auchan", "leclerc", "intermarché", "super u",
+    "casino", "avиа", "eni",
+
+    # Prix & coût
+    "prix", "coût", "tarif", "facture",
+    "moins cher", "moins chère", "pas cher", "bon marché",
+    "cher", "chère", "économique",
+    "comparateur", "comparaison",
+
+    # Actions & usage
+    "faire le plein", "plein", "plein d'essence", "plein carburant",
+    "ravitailler", "ravitaillement",
+    "consommation", "conso", "l/100", "litre", "litres",
+
+    # Paiement
+    "paiement", "payer", "carte", "cb", "sans contact",
+    "24/24", "24h", "automate"
     ]
 
     is_fuel_request = any(k in prompt_lower for k in fuel_keywords)
@@ -156,10 +195,37 @@ def chat_with_ollama(data: PromptRequest):
             )
 
     # ---------- CARBURANT ----------
-    fuel_type = "Gazole"
-    for f in ["SP98", "SP95", "E10", "E85"]:
-        if f.lower() in prompt_lower:
-            fuel_type = f
+    FUEL_MAP = {
+        "gazole": "gazole",
+        "diesel": "gazole",
+        "sp95": "sp95",
+        "sp 95": "sp95",
+        "sp98": "sp98",
+        "sp 98": "sp98",
+        "e10": "e10",
+        "e-10": "e10",
+        "e85": "e85",
+        "bioéthanol": "e85",
+        "ethanol": "e85",
+        "éthanol": "e85",
+        "super": "sp95",
+        "gpl": "gplc",  # correspond au dataset, vérifier si gpl_prix ou gplc_prix
+        "gplc": "gplc",
+        "gaz": "gplc",
+        "gaz naturel": "gnv",
+        "gnv": "gnv",
+        "électrique": "elec",
+        "electric": "elec",
+        "hydrogène": "h2",
+        "h2": "h2"
+    }
+
+    fuel_type = "gazole"  # valeur par défaut
+    prompt_lower = data.prompt.lower()
+    for key, val in FUEL_MAP.items():
+        if key in prompt_lower:
+            fuel_type = val
+            break
 
     radius_km = extract_radius(data.prompt, default_radius=15)
 
