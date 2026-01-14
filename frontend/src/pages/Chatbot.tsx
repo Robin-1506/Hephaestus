@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-import logo from "../assets/NaviGas.png";
+// import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 
 import "./Chatbot.css";
@@ -8,6 +8,8 @@ import "./Chatbot.css";
 import type { Message, Conversation } from "../types/chat";
 import { sendMessageAPI } from "../api/chatApi";
 import { generateTitleFromMessage } from "../utils/chatUtils";
+import ChatSidebar from "../components/ChatSidebar";
+
 
 
 
@@ -191,45 +193,15 @@ export default function Chatbot() {
   return (
     <div className="chat-layout">
       {/* SIDEBAR */}
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <img
-          src={logo}
-          alt="NaviGas"
-          className="sidebar-logo"
-          onClick={() => (document.location.href = "/")}
-        />
-
-        <button className="new-chat" onClick={createConversation}>
-          + Nouvelle conversation
-        </button>
-
-        <div className="conversation-list">
-          {conversations.map(c => (
-            <div
-              key={c.id}
-              className={`conversation-item ${
-                c.id === activeId ? "active" : ""
-              }`}
-            >
-              <span
-                className="conversation-title"
-                onClick={() => setActiveId(c.id)}
-              >
-                {c.title}
-              </span>
-
-              <button
-                className="delete-btn"
-                onClick={() => deleteConversation(c.id)}
-              >
-                🗑
-              </button>
-            </div>
-          ))}
-        </div>
-      </aside>
-
-      {sidebarOpen && <div className="overlay" onClick={() => setSidebarOpen(false)} />}
+      <ChatSidebar
+        conversations={conversations}
+        activeId={activeId}
+        open={sidebarOpen}
+        onCreateConversation={createConversation}
+        onSelectConversation={setActiveId}
+        onDeleteConversation={deleteConversation}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* CHAT */}
       <main className="chat">
