@@ -7,17 +7,9 @@ import "./Chatbot.css";
 
 import type { Message, Conversation } from "../types/chat";
 import { sendMessageAPI } from "../api/chatApi";
+import { generateTitleFromMessage } from "../utils/chatUtils";
 
-// ------------------- UTILS -------------------
-function generateTitleFromMessage(message: string) {
-  const carburantMatch = message.match(/Sans Plomb \d{2}/i);
-  const carburant = carburantMatch ? carburantMatch[0] : "Recherche";
 
-  const rayonMatch = message.match(/(\d+)\s?km/i);
-  const rayon = rayonMatch ? rayonMatch[1] + "km" : "";
-
-  return `${carburant}${rayon ? `, ${rayon}` : ""} de votre position`;
-}
 
 // ------------------- COMPONENT -------------------
 export default function Chatbot() {
