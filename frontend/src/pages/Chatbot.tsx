@@ -1,22 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 
-// import logo from "../assets/NaviGas.png";
 import mascotte from "../assets/Navi.png";
 
 import "./Chatbot.css";
 
-import type { Message, Conversation } from "../types/chat";
+import type { Message } from "../types/chat";
 import { sendMessageAPI } from "../api/chatApi";
-import { generateTitleFromMessage } from "../utils/chatUtils";
 import ChatSidebar from "../components/ChatSidebar";
+import { useConversations } from "../hooks/useConversations";
+
 
 
 
 
 // ------------------- COMPONENT -------------------
 export default function Chatbot() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const {
+    conversations,
+    activeId,
+    activeConversation,
+    setActiveId,
+    createConversation,
+    deleteConversation,
+    addMessage,
+  } = useConversations();
+
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -30,8 +38,6 @@ export default function Chatbot() {
   >("unknown");
 
   const endRef = useRef<HTMLDivElement | null>(null);
-
-  const activeConversation = conversations.find(c => c.id === activeId);
 
   // ------------------- GEOLOCATION -------------------
   const requestLocation = () => {
@@ -63,129 +69,47 @@ export default function Chatbot() {
     requestLocation();
   }, []);
 
-  // ------------------- PERSISTENCE -------------------
-  useEffect(() => {
-    const saved = localStorage.getItem("conversations");
-    if (saved) {
-      const parsed: Conversation[] = JSON.parse(saved);
-      if (parsed.length > 0) {
-        setConversations(parsed);
-        setActiveId(parsed[0].id);
-        return;
-      }
-    }
-    createConversation();
-  }, []);
-
-  useEffect(() => {
-    const nonEmpty = conversations.filter(c => c.messages.length > 0);
-    if (nonEmpty.length > 0) {
-      localStorage.setItem("conversations", JSON.stringify(nonEmpty));
-    }
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [conversations]);
-
-  // ------------------- ACTIONS -------------------
-  const createConversation = () => {
-    const conv: Conversation = {
-      id: crypto.randomUUID(),
-      title: "Nouvelle conversation",
-      messages: [],
-      createdAt: Date.now(),
-    };
-    setConversations(prev => [conv, ...prev]);
-    setActiveId(conv.id);
-  };
-
-  const deleteConversation = (id: string) => {
-    setConversations(prev => {
-      const filtered = prev.filter(c => c.id !== id);
-      if (id === activeId) {
-        setActiveId(filtered[0]?.id ?? null);
-      }
-      return filtered;
-    });
-  };
-
-  // ------------------- SEND MESSAGE (FIXED) -------------------
   const sendMessage = async () => {
-    if (!query.trim() || loading) return;
+  if (!query.trim() || loading || !activeId) return;
 
-    const userMessage: Message = {
-      id: Date.now(),
-      text: query,
-      sender: "user",
+  const userMessage: Message = {
+    id: Date.now(),
+    text: query,
+    sender: "user",
+  };
+
+  addMessage(activeId, userMessage);
+
+  setQuery("");
+  setLoading(true);
+
+  try {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const res = await sendMessageAPI(
+      userMessage.text,
+      userLocation?.lat,
+      userLocation?.lon
+    );
+
+    const botMessage: Message = {
+      id: Date.now() + 1,
+      text: res.response,
+      sender: "bot",
     };
 
-    let conversationId = activeId;
+    addMessage(activeId, botMessage);
+  } catch {
+    addMessage(activeId, {
+      id: Date.now() + 1,
+      text: "Oups 😕 Une erreur est survenue.",
+      sender: "bot",
+    });
+  } finally {
+    setLoading(false);
+  }
+};
 
-    if (!conversationId) {
-      const newConv: Conversation = {
-        id: crypto.randomUUID(),
-        title: generateTitleFromMessage(query),
-        messages: [userMessage],
-        createdAt: Date.now(),
-      };
-      setConversations(prev => [newConv, ...prev]);
-      setActiveId(newConv.id);
-      conversationId = newConv.id;
-    } else {
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === conversationId
-            ? { ...c, messages: [...c.messages, userMessage] }
-            : c
-        )
-      );
-    }
-
-    setQuery("");
-    setLoading(true);
-
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      const res = await sendMessageAPI(
-        userMessage.text,
-        userLocation?.lat,
-        userLocation?.lon
-      );
-
-      const botMessage: Message = {
-        id: Date.now() + 1,
-        text: res.response,
-        sender: "bot",
-      };
-
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === conversationId
-            ? { ...c, messages: [...c.messages, botMessage] }
-            : c
-        )
-      );
-    } catch {
-      setConversations(prev =>
-        prev.map(c =>
-          c.id === conversationId
-            ? {
-                ...c,
-                messages: [
-                  ...c.messages,
-                  {
-                    id: Date.now() + 1,
-                    text: "Oups 😕 Une erreur est survenue.",
-                    sender: "bot",
-                  },
-                ],
-              }
-            : c
-        )
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
