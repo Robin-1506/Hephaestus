@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import mascotte from "../assets/Navi.png";
 
@@ -9,10 +9,6 @@ import { sendMessageAPI } from "../api/chatApi";
 import ChatSidebar from "../components/ChatSidebar";
 import { useConversations } from "../hooks/useConversations";
 import { useGeolocation } from "../hooks/useGeolocation";
-
-
-
-
 
 // ------------------- COMPONENT -------------------
 export default function Chatbot() {
@@ -29,47 +25,14 @@ export default function Chatbot() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // const [userLocation, setUserLocation] = useState<{
-  //   lat: number;
-  //   lon: number;
-  // } | null>(null);
-
-  // const [locationStatus, setLocationStatus] = useState<
-  //   "unknown" | "requesting" | "granted" | "denied"
-  // >("unknown");
-
   const endRef = useRef<HTMLDivElement | null>(null);
 
+  // ------------------- SCROLL AUTOMATIQUE -------------------
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [activeConversation?.messages]);
+
   // ------------------- GEOLOCATION -------------------
-  // const requestLocation = () => {
-  //   if (!navigator.geolocation) {
-  //     setLocationStatus("denied");
-  //     return;
-  //   }
-
-  //   setLocationStatus("requesting");
-
-  //   navigator.geolocation.getCurrentPosition(
-  //     position => {
-  //       setUserLocation({
-  //         lat: position.coords.latitude,
-  //         lon: position.coords.longitude,
-  //       });
-  //       setLocationStatus("granted");
-  //     },
-  //     error => {
-  //       console.error("Erreur géolocalisation :", error);
-  //       setLocationStatus(
-  //         error.code === error.PERMISSION_DENIED ? "denied" : "unknown"
-  //       );
-  //     }
-  //   );
-  // };
-
-  // useEffect(() => {
-  //   requestLocation();
-  // }, []);
-
   const { location: userLocation, status: locationStatus, requestLocation } = useGeolocation();
 
   const sendMessage = async () => {
@@ -112,7 +75,6 @@ export default function Chatbot() {
     setLoading(false);
   }
 };
-
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
