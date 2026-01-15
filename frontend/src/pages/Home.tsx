@@ -15,7 +15,7 @@ export default function Home() {
             Avec NaviGas, demandez à Navi quelles stations services se trouvent le plus proche de vous !
           </p>
           <p>
-            Rien de plus simple : indiquez votre position et le rayon de recherche, et laissez le chatbot faire le reste.
+            Rien de plus simple : indiquez le type de carburant, votre position (ou celle souhaitée) et le rayon de recherche, et laissez le chatbot faire le reste.
           </p>
           <button onClick={() => navigate("/chatbot")}>
             Découvrir le chatbot
