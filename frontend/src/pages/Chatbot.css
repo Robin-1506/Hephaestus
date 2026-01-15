@@ -11,6 +11,7 @@
   display: flex;
   height: 100vh;
   background: var(--bg);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 /* SIDEBAR */
@@ -73,6 +74,7 @@
 
 .conversation-item.active {
   background-color: #e0e0e0;
+  color: var(--primary);
 }
 
 .conversation-title {
@@ -127,6 +129,10 @@
 
   .chat {
     width: 100%;
+  }
+
+  .loc-desktop {
+    display: none;
   }
 }
 
@@ -258,6 +264,52 @@
   border: none;
   background: var(--secondary);
   color: white;
+}
+
+/* LOCATION BUTTON */
+.location-ok {
+  border-radius: 20px;
+  padding: 0 14px;
+  border: none;
+  cursor: pointer;
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.icon-loc {
+  width: auto;
+  height: 20px;
+  margin-right: 15px;
+}
+
+.location-help {
+  display: flex;
+  align-items: center;
+}
+
+.icon-loc-search {
+  width: auto;
+  height: 20px;
+  margin-right: 5px;
+}
+
+.input-bar .location-btn {
+  background: white;
+  color: var(--primary);
+  border-radius: 20px;
+  padding: 0 14px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loc-mobile {
+  display: none;
 }
 
 /* ANIM */
