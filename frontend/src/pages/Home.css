@@ -54,6 +54,14 @@ margin: 0;
   opacity: 0.9;
 }
 
+@media (max-width: 768px) {
+  .hero-content button {
+    margin-top: 20px;
+    z-index: 10;
+    position: relative;
+  }
+}
+
 .hero-image {
   display: flex;
   align-items: center;
