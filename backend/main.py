@@ -248,17 +248,17 @@ def chat_with_ollama(data: PromptRequest):
     best = stations[0]
 
     response = (
-        f"🚗 Station {fuel_type} la moins chère :\n\n"
+        f"⛽ Station {fuel_type} la moins chère :\n\n"
         f"📍 {best['address']} – {best['city']}\n"
         f"💰 Prix : {best['price']} €/L\n"
-        f"📏 Distance : {best['distance_km']} km\n\n"
-        f"Autres stations proches :\n"
+        f"🚗 Distance : {best['distance_km']} km\n\n\n"
+        f"Autres stations proches :\n\n"
     )
 
     for i, s in enumerate(stations[1:], 1):
         response += (
             f"{i}. {s['address']} ({s['city']}) – "
-            f"{s['price']} €/L – {s['distance_km']} km\n"
+            f"{s['price']} €/L – {s['distance_km']} km\n\n"
         )
 
     return AIResponse(response=response)
