@@ -65,17 +65,17 @@ export default function Home() {
         <div className="steps">
           <div className="step">
             <span>1</span>
-            <p>Lorem ipsum dolor sit amet, vous indiquez votre position.</p>
+            <p>Posez votre question à Navi.</p>
           </div>
 
           <div className="step">
             <span>2</span>
-            <p>Lorem ipsum dolor sit amet, vous choisissez un rayon.</p>
+            <p>Il recherche les stations correspondant à votre demande.</p>
           </div>
 
           <div className="step">
             <span>3</span>
-            <p>Lorem ipsum dolor sit amet, le chatbot vous répond.</p>
+            <p>Choisissez la station qui vous convient.</p>
           </div>
         </div>
       </section>
