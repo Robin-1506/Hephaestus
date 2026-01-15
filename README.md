@@ -1,14 +1,17 @@
 # Hephaestus
+git clone https://github.com/Robin-1506/Hephaestus.git
+cd hephaestus
 
+docker compose up --build
 
-## Frontend
+Frontend
+http://localhost:3000
 
-Pour lancer la partie frontend de l'application :
+Backend (API FastAPI)
+http://localhost:8000
 
-1. se placer dans le dossier "frontend" ```cd frontend```
+Swagger : http://localhost:8000/docs
 
-2. installer les dépendances ```npm install```
+OLLAMA_HOST=ollama:11434
 
-3. démarrer le serveur de développement ```npm run dev```
-
-4. ouvrir l'URL locale affichée dans le terminal (ex : http://localhost:5173)
+docker compose down

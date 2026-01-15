@@ -1,9 +1,0 @@
-#!/bin/sh
-'''exec' "/Users/leaklein/Desktop/COURS/EPITECH/MSc 1/BOOTCAMP IA BOT/Hephaestus/TEST_API_BACKEND_LEA/TEST_FastAPI/bin/python3" "$0" "$@"
-' '''
-import sys
-from websockets.cli import main
-if __name__ == '__main__':
-    if sys.argv[0].endswith('.exe'):
-        sys.argv[0] = sys.argv[0][:-4]
-    sys.exit(main())
