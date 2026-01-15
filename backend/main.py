@@ -159,10 +159,13 @@ def chat_with_ollama(data: PromptRequest):
     is_fuel_request = any(k in prompt_lower for k in fuel_keywords)
 
     if not is_fuel_request:
-        payload = {"model": MODEL_NAME, "prompt": data.prompt, "stream": False}
-        r = requests.post(OLLAMA_URL, json=payload, timeout=600)
-        r.raise_for_status()
-        return AIResponse(response=r.json().get("response", ""))
+        return AIResponse(
+            response=(
+                "❌ Je suis spécialisé uniquement dans la recherche de stations-service, "
+                "de carburants et de prix. "
+                "Merci de poser une question liée à l'essence ou à l'énergie."
+            )
+        )
 
     # ---------- LOCALISATION ----------
     near_me = any(k in prompt_lower for k in [
