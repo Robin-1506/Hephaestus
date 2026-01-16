@@ -37,45 +37,45 @@ export default function Chatbot() {
   const { location: userLocation, status: locationStatus, requestLocation } = useGeolocation();
 
   const sendMessage = async () => {
-  if (!query.trim() || loading || !activeId) return;
+    if (!query.trim() || loading || !activeId) return;
 
-  const userMessage: Message = {
-    id: Date.now(),
-    text: query,
-    sender: "user",
-  };
-
-  addMessage(activeId, userMessage);
-
-  setQuery("");
-  setLoading(true);
-
-  try {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const res = await sendMessageAPI(
-      userMessage.text,
-      userLocation?.lat,
-      userLocation?.lon
-    );
-
-    const botMessage: Message = {
-      id: Date.now() + 1,
-      text: res.response,
-      sender: "bot",
+    const userMessage: Message = {
+      id: Date.now(),
+      text: query,
+      sender: "user",
     };
 
-    addMessage(activeId, botMessage);
-  } catch {
-    addMessage(activeId, {
-      id: Date.now() + 1,
-      text: "Oups 😕 Une erreur est survenue.",
-      sender: "bot",
-    });
-  } finally {
-    setLoading(false);
-  }
-};
+    addMessage(activeId, userMessage);
+
+    setQuery("");
+    setLoading(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      const res = await sendMessageAPI(
+        userMessage.text,
+        userLocation?.lat,
+        userLocation?.lon
+      );
+
+      const botMessage: Message = {
+        id: Date.now() + 1,
+        text: res.response,
+        sender: "bot",
+      };
+
+      addMessage(activeId, botMessage);
+    } catch {
+      addMessage(activeId, {
+        id: Date.now() + 1,
+        text: "Oups 😕 Une erreur est survenue.",
+        sender: "bot",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -96,21 +96,21 @@ export default function Chatbot() {
       {/* CHAT */}
       <main className="chat">
         <button
-  className="sidebar-toggle"
-  onClick={() => setSidebarOpen(true)}
->
-  ☰
-</button>
+          className="sidebar-toggle"
+          onClick={() => setSidebarOpen(true)}
+        >
+          ☰
+        </button>
         <div className="messages">
           {(!activeConversation ||
             activeConversation.messages.length === 0) && (
-            <div className="empty">
-              <img src={mascotte} alt="Navi" />
-              <p>
-                "Aide-moi à trouver du Sans Plomb 95 dans un rayon de 5km."
-              </p>
-            </div>
-          )}
+              <div className="empty">
+                <img src={mascotte} alt="Navi" />
+                <p>
+                  "Aide-moi à trouver du Sans Plomb 95 dans un rayon de 5km."
+                </p>
+              </div>
+            )}
 
           {activeConversation?.messages.map(m => (
             <div key={m.id} className={`message ${m.sender}`}>
@@ -134,22 +134,22 @@ export default function Chatbot() {
         </div>
 
         <form
-  className="input-bar"
-  onSubmit={e => {
-    e.preventDefault();
-    sendMessage();
-  }}
->
-  <input
-    value={query}
-    onChange={e => setQuery(e.target.value)}
-    placeholder="Ex : stations à moins de 5km..."
-  />
+          className="input-bar"
+          onSubmit={e => {
+            e.preventDefault();
+            sendMessage();
+          }}
+        >
+          <input
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Ex : stations à moins de 5km..."
+          />
 
-  <LocationButton status={locationStatus} onRequest={requestLocation} />
+          <LocationButton status={locationStatus} onRequest={requestLocation} />
 
-  <button disabled={!query.trim() || loading}>➤</button>
-</form>
+          <button disabled={!query.trim() || loading}>➤</button>
+        </form>
       </main>
     </div>
   );

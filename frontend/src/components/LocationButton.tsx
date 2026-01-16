@@ -9,7 +9,7 @@ type LocationButtonProps = {
 
 export default function LocationButton({ status, onRequest }: LocationButtonProps) {
   if (status === "granted") {
-  return (
+    return (
       <div className="location-ok">
         <img
           src={LocOK}
@@ -18,7 +18,8 @@ export default function LocationButton({ status, onRequest }: LocationButtonProp
         />
         <span className='loc-desktop'>Localisé</span>
       </div>
-  )}
+    )
+  }
 
   return (
     <>
@@ -28,7 +29,6 @@ export default function LocationButton({ status, onRequest }: LocationButtonProp
         disabled={status === "requesting"}
         className={`location-btn ${status}`}
       >
-        {/* {status === "requesting" ? "📍 Localisation..." : "📍 Activer la localisation"} */}
         {status === "requesting" ? (
           <img src={LocSearch} className="icon-loc" alt="Localisation en cours" />
         ) : (
@@ -39,17 +39,6 @@ export default function LocationButton({ status, onRequest }: LocationButtonProp
           </>
         )}
       </button>
-
-      {/* {status === "denied" && (
-        <div className="location-help">
-          <img
-          src={LocSearch}
-          alt="Cherche localisation"
-          className="icon-loc-search"
-        />
-          Autoriser la localisation
-        </div>
-      )} */}
     </>
   );
 }

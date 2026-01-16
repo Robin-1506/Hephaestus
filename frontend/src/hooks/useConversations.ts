@@ -19,7 +19,6 @@ export function useConversations() {
       }
     }
     createConversation();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // -------- PERSISTENCE --------

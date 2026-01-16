@@ -39,9 +39,8 @@ export default function ChatSidebar({
           {conversations.map(c => (
             <div
               key={c.id}
-              className={`conversation-item ${
-                c.id === activeId ? "active" : ""
-              }`}
+              className={`conversation-item ${c.id === activeId ? "active" : ""
+                }`}
             >
               <span
                 className="conversation-title"
